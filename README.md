@@ -1,2 +1,2 @@
 # patentsview
-Add-ons to PatentsView databases from the USPTO for Research
+Add-ons to PatentsView databases from the USPTO for Research using R
