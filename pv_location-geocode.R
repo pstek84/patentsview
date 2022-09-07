@@ -1,4 +1,4 @@
-## PatentsView (USPTO Data)
+## PatentsView Location with Geocoder (Pelias)
 
 #.. download location zip
 setwd('~/patentsview') #Set working directory
