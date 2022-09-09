@@ -1,4 +1,4 @@
-# Patentsview
+# PatentsView Data Table Modifications
 
 This is R code used to setup a patent database in MySQL using [PatentsView data tables](https://patentsview.org/download/data-download-tables) from the USPTO. In some instances the PatentsView tables are modified, as stated below:
 
