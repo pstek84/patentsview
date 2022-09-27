@@ -1,30 +1,22 @@
 ## PatentsView Assignee with Triple Helix Classification
 
-#.. download assignee zip
+#.. preamble
 setwd('~/patentsview') #Set working directory
-library(RMySQL); dbname <- 'dbname'; username <- 'username'; password <- 'password'; host <- 'localhost'
+library(RMySQL); dbname <- 'patentsview'; username <- 'user'; password <- 'password'; host <- 'localhost'
 dl_url <- 'https://s3.amazonaws.com/data.patentsview.org/download/' #Set generic URL with PatentsView data
 
-fname <- 'assignee.tsv' #File name
-download.file(paste0(dl_url, fname, '.zip'), paste0(fname, '.zip')) #Download file
+#.. download
+tname <- 'assignee' #File name
+download.file(paste0(dl_url, tname, '.tsv.zip'), paste0(fname, '.tsv.zip')) #Download file
 unzip(paste0(fname, '.zip')) #Unzip
-data <- read.csv(fname, sep='\t')
 
-#.. write to assignee table in database
+#.. load data and amend table
 con <- dbConnect(RMySQL::MySQL(), dbname= dbname, username= username, password= password, host= host)
 #dbListTables(con)
-#dbRemoveTable(con, 'location')
+#dbRemoveTable(con, 'assignee')
 dbSendQuery(con, 'CREATE TABLE assignee (id VARCHAR(36), type INT(2), name_first VARCHAR(96), name_last VARCHAR(96), organization VARCHAR(256));')
-dbSendQuery(con, 'CREATE INDEX id ON assignee (id);')
-#dbSendQuery(con, 'SET GLOBAL local_infile=1;') #may have to do this as sudo user in MySQL command line
-dbWriteTable(con, 'assignee', data, row.names= FALSE, overwrite= FALSE, append= TRUE)
-#check <- dbReadTable(con, 'assignee')
-dbDisconnect(con); remove(con)
-
-#.. update assignee table structure (add columns)
-con <- dbConnect(RMySQL::MySQL(), dbname= dbname, username= username, password= password, host= host)
+dbSendQuery(con, 'LOAD DATA LOCAL INFILE "/home/user/patentsview/assignee.tsv"  INTO TABLE assignee FIELDS TERMINATED BY "\t" ENCLOSED BY "\\"" LINES TERMINATED BY "\n" IGNORE 1 LINES;')
 dbSendQuery(con, 'ALTER TABLE assignee ADD COLUMN th VARCHAR(1);')
-dbSendQuery(con, 'CREATE INDEX th ON assignee (th);')
 dbDisconnect(con); remove(con)
 
 #.. triple helix actor detection
@@ -40,7 +32,7 @@ for(n in ids$id){
   line <- dbFetch(dbSendQuery(con, paste0('SELECT * FROM assignee WHERE id = "', n, '"' )))
   if(line$organization == ''){ next }
   
-  print(line$organization)
+  #print(line$organization)
   orgname <- tolower(stri_trans_general(str= line$organization, id = "Latin-ASCII")) #clean organization name  
   unicheck <- grepl(uniwords, orgname) & !grepl('universal', orgname) #check if it is a university, removes common 'universal' false-positive
   
@@ -62,3 +54,10 @@ for(n in ids$id){
 }
 #check <- dbReadTable(con, 'assignee')
 dbDisconnect(con); remove(con)
+
+#.. add indexes
+con <- dbConnect(RMySQL::MySQL(), dbname= dbname, username= username, password= password, host= host)
+dbSendQuery(con, 'CREATE INDEX id ON assignee (id);')
+dbSendQuery(con, 'CREATE INDEX th ON assignee (th);')
+dbDisconnect(con); remove(con)
+
